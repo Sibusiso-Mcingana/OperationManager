@@ -1,0 +1,160 @@
+﻿@page "/"
+@using OperationManager.Models
+@using Blazorise
+
+
+<div style="background-color: yellow;">
+    <h3>Operations</h3>
+</div>
+<div class="container">
+<table class="table">
+    <thead>
+        <tr>
+            <th>Operation ID</th>
+            <th>Name</th>
+            <th>Order</th>
+            <th>Device</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var operation in operations)
+        {
+            <tr>
+                <td>@operation.OperationID</td>
+                <td>@operation.Name</td>
+                <td>@operation.OrderInWhichToPerform</td>
+                <td>@(operation.Device != null ? operation.Device.Name : "-")</td>
+                <td><button class="btn btn-primary" @onclick="() => ShowAddDeviceModal(operation)">Add Device</button></td>
+                <td><button class="btn btn-danger" @onclick="() => RemoveOperation(operation)">Remove</button></td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<button class="btn btn-primary" @onclick="ShowAddOperationModal">Add Operation</button>
+ <div class="text-center">
+        <img src="images/Jendamark.png" alt="Logo" style="max-width: 200%; height: auto; margin-top: 500px;">
+    </div>
+</div>
+
+<Blazorise.Modal Title="Add Operation" @ref="addOperationModal" OnClosed="HandleAddOperationModalClose">
+    <ModalBody>
+        <div class="form-group">
+            <label for="operationName" style="font-weight: bold; color: yellow;">Name</label>
+            <input type="text" class="form-control" id="operationName" @bind="@newOperation.Name">
+        </div>
+        <div class="form-group">
+            <label for="operationOrder" style="font-weight: bold; color: yellow;">Order</label>
+            <input type="number" class="form-control" id="operationOrder" @bind="@newOperation.OrderInWhichToPerform">
+        </div>
+    </ModalBody>
+    <ModalFooter>
+        <button class="btn btn-primary" @onclick="AddOperation">Add</button>
+        <button class="btn btn-secondary" @onclick="CloseAddOperationModal">Cancel</button>
+    </ModalFooter>
+</Blazorise.Modal>
+
+<Blazorise.Modal Title="Add Device" @ref="addDeviceModal" OnClosed="HandleAddDeviceModalClose">
+    <ModalBody>
+        <div class="form-group">
+            <label for="deviceName" style="font-weight: bold; color: yellow;">Name</label>
+            <input type="text" class="form-control" id="deviceName" @bind="@newDevice.Name">
+        </div>
+        <div class="form-group">
+            <label for="deviceType" style="font-weight: bold; color: yellow;">Type</label>
+            <select class="form-control" id="deviceType" @bind="@newDevice.DeviceType">
+                @foreach (DeviceType deviceType in Enum.GetValues(typeof(DeviceType)))
+                {
+                    <option value="@deviceType">@deviceType</option>
+                }
+            </select>
+        </div>
+    </ModalBody>
+    <ModalFooter>
+        <button class="btn btn-primary" @onclick="() => AddDevice(currentOperation)">Add</button>
+        <button class="btn btn-secondary" @onclick="CloseAddDeviceModal">Cancel</button>
+    </ModalFooter>
+</Blazorise.Modal>
+
+@code {
+    private List<Operation> operations = new List<Operation>();
+    private Operation newOperation = new Operation();
+    private Device newDevice = new Device();
+    private Operation currentOperation;
+    private Blazorise.Modal addOperationModal;
+    private Blazorise.Modal addDeviceModal;
+
+    protected override void OnInitialized()
+    {
+        // Initialize the list of operations with sample data
+        operations.Add(new Operation { OperationID = 1, Name = "Scan", OrderInWhichToPerform = 1 });
+        operations.Add(new Operation { OperationID = 2, Name = "Capture", OrderInWhichToPerform = 2 });
+        operations.Add(new Operation { OperationID = 3, Name = "Print", OrderInWhichToPerform = 3 });
+
+        base.OnInitialized();
+    }
+
+    private void RemoveOperation(Operation operation)
+    {
+        operations.Remove(operation);
+    }
+
+    private void ShowAddOperationModal()
+    {
+        newOperation = new Operation();
+        addOperationModal.Show();
+    }
+
+    private void AddOperation()
+    {
+        operations.Add(new Operation
+        {
+            OperationID = operations.Count + 1,
+            Name = newOperation.Name,
+            OrderInWhichToPerform = newOperation.OrderInWhichToPerform
+        });
+
+        addOperationModal.Hide();
+    }
+
+    private void CloseAddOperationModal()
+    {
+        addOperationModal.Hide();
+    }
+
+    private void ShowAddDeviceModal(Operation operation)
+    {
+        currentOperation = operation;
+        newDevice = new Device();
+        addDeviceModal.Show();
+    }
+
+    private void AddDevice(Operation operation)
+    {
+        operation.Device = new Device
+        {
+            DeviceID = operation.OperationID,
+            Name = newDevice.Name,
+            DeviceType = newDevice.DeviceType
+        };
+
+        addDeviceModal.Hide();
+    }
+
+    private void CloseAddDeviceModal()
+    {
+        addDeviceModal.Hide();
+    }
+
+    private void HandleAddOperationModalClose()
+    {
+        newOperation = new Operation();
+    }
+
+    private void HandleAddDeviceModalClose()
+    {
+        newDevice = new Device();
+        currentOperation = null;
+    }
+}
